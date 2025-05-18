@@ -25,5 +25,34 @@ class UserService {
     }
   }
 
-  // Ajoute createUser, updateUser si besoin
+  static Future<void> createUser(Map<String, dynamic> userData) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/users/create'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(userData),
+    );
+    if (response.statusCode != 201) {
+      throw Exception('Erreur lors de la création de l\'utilisateur');
+    }
+  }
+
+  static Future<void> updateUser(String id, Map<String, dynamic> userData) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/api/users/update/$id'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(userData),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Erreur lors de la modification de l\'utilisateur');
+    }
+  }
+
+  static Future<bool> checkEmailExists(String email) async {
+    final response = await http.get(Uri.parse('$baseUrl/api/users/get'));
+    if (response.statusCode == 200) {
+      final users = json.decode(response.body) as List;
+      return users.any((u) => u['email'] == email);
+    }
+    return false;
+  }
 } 
