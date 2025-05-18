@@ -86,13 +86,16 @@ class ReclamationService {
     }
   }
 // Méthode pour mettre à jour uniquement le status d'une réclamation
-  static Future<void> updateReclamationStatus(String id, String status) async {
+  static Future<void> updateReclamationStatus(String id, String status, {String? assignedTo}) async {
     final baseUrl = getBaseUrl();
 
     final response = await http.put(
       Uri.parse('$baseUrl/api/reclamations/$id/status'),
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({'status': status}),
+      body: json.encode({
+        'status': status,
+        if (assignedTo != null) 'assignedTo': assignedTo,
+      }),
     );
 
     if (response.statusCode != 200) {

@@ -36,7 +36,7 @@ class _ReclamationFormState extends State<ReclamationForm> {
   int _priority = 1;
   String _status = 'New';
   String _location = '';
-  String _createdBy = ''; // Variable pour l'email de l'utilisateur connecté
+  String _createdBy = ''; // Variable pour le nom de l'utilisateur connecté
 
   // Liste des départements pour CheckboxListTile
   final List<String> _availableDepartments = ['HR', 'IT', 'Maintenance', 'Admin'];
@@ -50,7 +50,6 @@ class _ReclamationFormState extends State<ReclamationForm> {
   @override
   void initState() {
     super.initState();
-    // Appel à la méthode pour récupérer l'email de l'utilisateur connecté
     _getUserEmail();
   }
 
@@ -59,7 +58,7 @@ class _ReclamationFormState extends State<ReclamationForm> {
     String? email = await ApiService.obtenirEmailUtilisateurConnecte();
     if (email != null) {
       setState(() {
-        _createdBy = email; // Affecter l'email à la variable _createdBy
+        _createdBy = email;
       });
     } else {
       print("Aucun utilisateur connecté");
@@ -68,6 +67,12 @@ class _ReclamationFormState extends State<ReclamationForm> {
 
   // Fonction pour soumettre le formulaire
   void _submitForm() async {
+    if (_createdBy.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Le nom de l\'utilisateur n\'est pas encore chargé. Veuillez patienter.')),
+      );
+      return;
+    }
     print("Formulaire soumis");
 
     if (_formKey.currentState?.validate() ?? false) {
@@ -96,7 +101,7 @@ class _ReclamationFormState extends State<ReclamationForm> {
       final reclamationData = {
         'objet': _objet,
         'description': _description,
-        'createdBy': _createdBy,  // Utilisation de l'email de l'utilisateur connecté
+        'createdBy': _createdBy,  // Utilisation du nom de l'utilisateur connecté
         'departments': _departments,
         'priority': _priority,
         'status': _status,
@@ -138,6 +143,13 @@ class _ReclamationFormState extends State<ReclamationForm> {
 
   @override
   Widget build(BuildContext context) {
+    // Afficher un indicateur de chargement si le nom n'est pas encore prêt
+    if (_createdBy.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: Text('Créer une réclamation')),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: Text('Créer une réclamation')),
       body: Padding(
@@ -158,19 +170,7 @@ class _ReclamationFormState extends State<ReclamationForm> {
                   validator: (value) => value!.isEmpty ? 'La description est requise' : null,
                   onSaved: (value) => _description = value!,
                 ),
-                TextFormField(
-                  initialValue: _createdBy.isEmpty ? '' : _createdBy,  // Si _createdBy est vide, afficher un champ vide
-                  decoration: InputDecoration(labelText: 'Créé par'),  // Libellé du champ
-                  onChanged: (value) {
-                    setState(() {
-                      _createdBy = value;  // Met à jour la valeur à chaque changement
-                    });
-                  },
-                  validator: (value) => value!.isEmpty ? 'Ce champ est requis' : null,  // Validation pour le champ
-                ),
-
-
-                // Sélection de départements avec CheckboxListTile
+                // Choix des départements
                 Text('Départements (sélectionner au moins un)'),
                 ..._availableDepartments.map((String dept) {
                   return CheckboxListTile(
@@ -220,7 +220,7 @@ class _ReclamationFormState extends State<ReclamationForm> {
                 ),
                 SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: _submitForm,  // Le bouton appelle la fonction _submitForm
+                  onPressed: _createdBy.isEmpty ? null : _submitForm,  // Désactive si nom non prêt
                   child: Text('Soumettre la réclamation'),
                 ),
               ],

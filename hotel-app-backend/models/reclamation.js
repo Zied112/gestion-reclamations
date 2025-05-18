@@ -8,7 +8,7 @@ const reclamationSchema = new mongoose.Schema({
   status: { type: String, enum: ['New', 'In Progress', 'Done'], default: 'New', required: true }, // Correspond à _status
   location: { type: String, required: true }, // Correspond à _location
   assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Correspond à _assignedTo (référence vers un utilisateur)
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, 
+  createdBy: { type: String, required: true }, // Stocke l'email ou le nom du staff
   createdAt: { type: Date, default: Date.now }, // La date de création
   updatedAt: { type: Date }, // Date de mise à jour
 });
