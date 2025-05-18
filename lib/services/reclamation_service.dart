@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../screens/reclamation.dart';
 import 'package:flutter/foundation.dart';  // Pour vérifier la plateforme
+import 'package:flutter/material.dart';
 
 class ReclamationService {
   // Fonction pour obtenir l'URL de base selon la plateforme
@@ -46,41 +47,41 @@ class ReclamationService {
 
 
   // Méthode pour créer une réclamation
-  static Future<void> createReclamation(Reclamation reclamation) async {
+  static Future<void> createReclamation(Reclamation reclamation, BuildContext context) async {
     final baseUrl = getBaseUrl();
-
-    // Vérifie si la réclamation est valide
     if (reclamation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('La réclamation ne peut pas être nulle')));
       throw Exception('La réclamation ne peut pas être nulle');
     }
-
     final response = await http.post(
       Uri.parse('$baseUrl/api/reclamations/create'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(reclamation.toJson()),
     );
-
-    if (response.statusCode != 201) {
+    if (response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Réclamation créée avec succès')));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur lors de la création de la réclamation')));
       throw Exception('Failed to create reclamation');
     }
   }
 
   // Méthode pour modifier une réclamation
-  static Future<void> updateReclamation(Reclamation reclamation) async {
+  static Future<void> updateReclamation(Reclamation reclamation, BuildContext context) async {
     final baseUrl = getBaseUrl();
-
-    // Assure-toi que l'ID de la réclamation est présent
-    if (reclamation.id == null) {
+    if (reclamation.id == null || reclamation.id.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('ID de la réclamation manquant')));
       throw Exception('La réclamation doit avoir un ID pour être modifiée');
     }
-
     final response = await http.put(
       Uri.parse('$baseUrl/api/reclamations/update/${reclamation.id}'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(reclamation.toJson()),
     );
-
-    if (response.statusCode != 200) {
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Réclamation modifiée avec succès')));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur lors de la modification de la réclamation')));
       throw Exception('Échec de la modification de la réclamation');
     }
   }
@@ -100,12 +101,15 @@ class ReclamationService {
   }
 
   // Méthode pour supprimer une réclamation
-  static Future<void> deleteReclamation(String id) async {
+  static Future<void> deleteReclamation(String id, BuildContext context) async {
     final baseUrl = getBaseUrl();
     final response = await http.delete(
       Uri.parse('$baseUrl/api/reclamations/$id'),
     );
-    if (response.statusCode != 200) {
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Réclamation supprimée')));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur lors de la suppression de la réclamation')));
       throw Exception('Erreur lors de la suppression de la réclamation');
     }
   }

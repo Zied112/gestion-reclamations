@@ -29,7 +29,7 @@ class _UsersTabState extends State<UsersTab> {
   }
 
   void _deleteUser(String id) async {
-    await UserService.deleteUser(id);
+    await UserService.deleteUser(id, context);
     _fetchUsers();
   }
 
@@ -175,12 +175,12 @@ class _UserFormDialogState extends State<UserFormDialog> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Cet email existe déjà.')));
         return;
       }
-      await UserService.createUser(userData);
+      await UserService.createUser(userData, context);
     } else {
       if (_passwordController.text.isNotEmpty) {
         userData['password'] = _passwordController.text;
       }
-      await UserService.updateUser(widget.user!['_id'], userData);
+      await UserService.updateUser(widget.user!['_id'], userData, context);
     }
     Navigator.of(context).pop(true);
   }
@@ -205,7 +205,7 @@ class _UserFormDialogState extends State<UserFormDialog> {
                 decoration: InputDecoration(labelText: 'Email'),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Email requis';
-                  final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+[0m');
+                  final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
                   if (!emailRegex.hasMatch(v)) return 'Email invalide';
                   return null;
                 },

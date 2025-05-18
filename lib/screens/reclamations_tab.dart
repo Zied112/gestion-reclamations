@@ -23,7 +23,7 @@ class _ReclamationsTabState extends State<ReclamationsTab> {
   }
 
   void _deleteReclamation(String id) async {
-    await ReclamationService.deleteReclamation(id);
+    await ReclamationService.deleteReclamation(id, context);
     _fetchReclamations();
   }
 
@@ -145,12 +145,16 @@ class _ReclamationFormDialogState extends State<ReclamationFormDialog> {
       createdBy: widget.reclamation?.createdBy ?? '',
       assignedTo: widget.reclamation?.assignedTo ?? '',
     );
-    if (widget.reclamation == null) {
-      await ReclamationService.createReclamation(reclamationData);
-    } else {
-      await ReclamationService.updateReclamation(reclamationData);
+    try {
+      if (widget.reclamation == null) {
+        await ReclamationService.createReclamation(reclamationData, context);
+      } else {
+        await ReclamationService.updateReclamation(reclamationData, context);
+      }
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      // L'erreur est déjà affichée par le service
     }
-    Navigator.of(context).pop(true);
   }
 
   @override

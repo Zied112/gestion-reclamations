@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 class UserService {
   static String get baseUrl {
@@ -18,31 +19,40 @@ class UserService {
     }
   }
 
-  static Future<void> deleteUser(String id) async {
+  static Future<void> deleteUser(String id, BuildContext context) async {
     final response = await http.delete(Uri.parse('$baseUrl/api/users/$id'));
-    if (response.statusCode != 200) {
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Utilisateur supprimé')));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur lors de la suppression de l\'utilisateur')));
       throw Exception('Erreur lors de la suppression');
     }
   }
 
-  static Future<void> createUser(Map<String, dynamic> userData) async {
+  static Future<void> createUser(Map<String, dynamic> userData, BuildContext context) async {
     final response = await http.post(
       Uri.parse('$baseUrl/api/users/create'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(userData),
     );
-    if (response.statusCode != 201) {
+    if (response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Utilisateur créé avec succès')));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur lors de la création de l\'utilisateur')));
       throw Exception('Erreur lors de la création de l\'utilisateur');
     }
   }
 
-  static Future<void> updateUser(String id, Map<String, dynamic> userData) async {
+  static Future<void> updateUser(String id, Map<String, dynamic> userData, BuildContext context) async {
     final response = await http.put(
       Uri.parse('$baseUrl/api/users/update/$id'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(userData),
     );
-    if (response.statusCode != 200) {
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Utilisateur modifié avec succès')));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur lors de la modification de l\'utilisateur')));
       throw Exception('Erreur lors de la modification de l\'utilisateur');
     }
   }
