@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/reclamation_service.dart';
 import 'reclamation.dart';
+import 'package:intl/intl.dart';
 
 class ReclamationsTab extends StatefulWidget {
   @override
@@ -9,6 +10,12 @@ class ReclamationsTab extends StatefulWidget {
 
 class _ReclamationsTabState extends State<ReclamationsTab> {
   late Future<List<Reclamation>> _reclamations;
+  String? _selectedStatus;
+  String? _selectedDepartment;
+  DateTime? _startDate;
+  DateTime? _endDate;
+  final List<String> _statusOptions = ['New', 'In Progress', 'Done'];
+  final List<String> _departmentOptions = ['HR', 'IT', 'Maintenance', 'Admin'];
 
   @override
   void initState() {
@@ -35,48 +42,149 @@ class _ReclamationsTabState extends State<ReclamationsTab> {
     if (result == true) _fetchReclamations();
   }
 
+  List<Reclamation> _applyFilters(List<Reclamation> list) {
+    return list.where((r) {
+      final statusMatch = _selectedStatus == null || r.status == _selectedStatus;
+      final deptMatch = _selectedDepartment == null || r.departments.contains(_selectedDepartment);
+      final dateMatch = (_startDate == null || r.createdAt.isAfter(_startDate!)) && (_endDate == null || r.createdAt.isBefore(_endDate!));
+      return statusMatch && deptMatch && dateMatch;
+    }).toList();
+  }
+
+  Future<void> _pickDateRange() async {
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(Duration(days: 365)),
+      initialDateRange: _startDate != null && _endDate != null ? DateTimeRange(start: _startDate!, end: _endDate!) : null,
+    );
+    if (picked != null) {
+      setState(() {
+        _startDate = picked.start;
+        _endDate = picked.end;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        FutureBuilder<List<Reclamation>>(
-          future: _reclamations,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(child: Text('Erreur: [${snapshot.error}'));
-            }
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(child: Text('Aucune réclamation.'));
-            }
-            return ListView.builder(
-              itemCount: snapshot.data!.length,
-              itemBuilder: (context, index) {
-                final r = snapshot.data![index];
-                return Card(
-                  child: ListTile(
-                    title: Text(r.objet),
-                    subtitle: Text(r.description),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.edit),
-                          onPressed: () => _showReclamationForm(reclamation: r),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.delete),
-                          onPressed: () => _deleteReclamation(r.id),
-                        ),
-                      ],
-                    ),
+        Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  DropdownButton<String>(
+                    value: _selectedStatus,
+                    hint: Text('Status'),
+                    items: [null, ..._statusOptions].map((status) {
+                      return DropdownMenuItem<String>(
+                        value: status,
+                        child: Text(status ?? 'Tous'),
+                      );
+                    }).toList(),
+                    onChanged: (val) => setState(() => _selectedStatus = val),
                   ),
-                );
-              },
-            );
-          },
+                  SizedBox(width: 8),
+                  DropdownButton<String>(
+                    value: _selectedDepartment,
+                    hint: Text('Département'),
+                    items: [null, ..._departmentOptions].map((dept) {
+                      return DropdownMenuItem<String>(
+                        value: dept,
+                        child: Text(dept ?? 'Tous'),
+                      );
+                    }).toList(),
+                    onChanged: (val) => setState(() => _selectedDepartment = val),
+                  ),
+                  SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    icon: Icon(Icons.date_range),
+                    label: Text(_startDate == null && _endDate == null ? 'Dates' : '${_startDate != null ? DateFormat('dd/MM/yyyy').format(_startDate!) : ''} - ${_endDate != null ? DateFormat('dd/MM/yyyy').format(_endDate!) : ''}'),
+                    onPressed: _pickDateRange,
+                  ),
+                  if (_startDate != null || _endDate != null)
+                    IconButton(
+                      icon: Icon(Icons.clear),
+                      onPressed: () => setState(() {
+                        _startDate = null;
+                        _endDate = null;
+                      }),
+                    ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: FutureBuilder<List<Reclamation>>(
+                future: _reclamations,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Erreur: ${snapshot.error}'));
+                  }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text('Aucune réclamation.'));
+                  }
+                  final filtered = _applyFilters(snapshot.data!);
+                  return ListView.builder(
+                    itemCount: filtered.length,
+                    itemBuilder: (context, index) {
+                      final r = filtered[index];
+                      return Card(
+                        child: ListTile(
+                          title: Text(r.objet),
+                          onTap: () => showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text('Détails de la réclamation'),
+                              content: SingleChildScrollView(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Objet : ${r.objet}'),
+                                    SizedBox(height: 8),
+                                    Text('Description : ${r.description}'),
+                                    SizedBox(height: 8),
+                                    Text('Départements : ${r.departments.join(', ')}'),
+                                    SizedBox(height: 8),
+                                    Text('Priorité : ${r.priority}'),
+                                    SizedBox(height: 8),
+                                    Text('Statut : ${r.status}'),
+                                    SizedBox(height: 8),
+                                    Text('Emplacement : ${r.location}'),
+                                    SizedBox(height: 8),
+                                    Text('Créée le : ${DateFormat('dd/MM/yyyy HH:mm').format(r.createdAt)}'),
+                                    SizedBox(height: 8),
+                                    Text('Créée par : ${r.createdBy}'),
+                                    SizedBox(height: 8),
+                                    Text('Assignée à : ${r.assignedTo}'),
+                                  ],
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: Text('Fermer'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          trailing: IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () => _deleteReclamation(r.id),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
         Positioned(
           bottom: 16,
