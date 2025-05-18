@@ -137,42 +137,7 @@ class _ReclamationsTabState extends State<ReclamationsTab> {
                       return Card(
                         child: ListTile(
                           title: Text(r.objet),
-                          onTap: () => showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text('Détails de la réclamation'),
-                              content: SingleChildScrollView(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Objet : ${r.objet}'),
-                                    SizedBox(height: 8),
-                                    Text('Description : ${r.description}'),
-                                    SizedBox(height: 8),
-                                    Text('Départements : ${r.departments.join(', ')}'),
-                                    SizedBox(height: 8),
-                                    Text('Priorité : ${r.priority}'),
-                                    SizedBox(height: 8),
-                                    Text('Statut : ${r.status}'),
-                                    SizedBox(height: 8),
-                                    Text('Emplacement : ${r.location}'),
-                                    SizedBox(height: 8),
-                                    Text('Créée le : ${DateFormat('dd/MM/yyyy HH:mm').format(r.createdAt)}'),
-                                    SizedBox(height: 8),
-                                    Text('Créée par : ${r.createdBy}'),
-                                    SizedBox(height: 8),
-                                    Text('Assignée à : ${r.assignedTo}'),
-                                  ],
-                                ),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: Text('Fermer'),
-                                ),
-                              ],
-                            ),
-                          ),
+                          subtitle: Text(r.description),
                           trailing: IconButton(
                             icon: Icon(Icons.delete),
                             onPressed: () => _deleteReclamation(r.id),
