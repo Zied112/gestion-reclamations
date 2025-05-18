@@ -202,14 +202,14 @@ class _UserFormDialogState extends State<UserFormDialog> {
               ),
               TextFormField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: 'Email'),
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                ),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Email requis';
-                  final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-                  if (!emailRegex.hasMatch(v)) return 'Email invalide';
+                  if (!v.contains('@') || !v.contains('.')) return 'Email invalide';
                   return null;
                 },
-                enabled: widget.user == null,
               ),
               TextFormField(
                 controller: _passwordController,
