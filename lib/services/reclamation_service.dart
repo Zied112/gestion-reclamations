@@ -88,18 +88,23 @@ class ReclamationService {
 // Méthode pour mettre à jour uniquement le status d'une réclamation
   static Future<void> updateReclamationStatus(String id, String status, {String? assignedTo}) async {
     final baseUrl = getBaseUrl();
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/reclamations/update/$id'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'status': status,
+          if (assignedTo != null) 'assignedTo': assignedTo,
+        }),
+      );
 
-    final response = await http.put(
-      Uri.parse('$baseUrl/api/reclamations/$id/status'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'status': status,
-        if (assignedTo != null) 'assignedTo': assignedTo,
-      }),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Échec de la mise à jour du statut');
+      if (response.statusCode != 200) {
+        print('Erreur de mise à jour du statut: ${response.body}');
+        throw Exception('Échec de la mise à jour du statut: ${response.body}');
+      }
+    } catch (e) {
+      print('Exception lors de la mise à jour du statut: $e');
+      throw Exception('Erreur lors de la mise à jour du statut: $e');
     }
   }
 

@@ -29,26 +29,22 @@ exports.getAllUsers = async (req, res) => {
 
 
 exports.loginUser = async (req, res) => {
-  const { email, password } = req.body;
+  const { name, password } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ name });
 
     if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
 
-    // ⚠️ Si tu as hashé les mots de passe :
-    // const isMatch = await bcrypt.compare(password, user.password);
-    // if (!isMatch) return res.status(401).json({ message: 'Mot de passe incorrect' });
-
-    // ⚠️ Sinon (en clair, pour test uniquement) :
     if (user.password !== password) {
       return res.status(401).json({ message: 'Mot de passe incorrect' });
     }
 
     res.status(200).json({
       id: user._id,
+      name: user.name,
       email: user.email,
-      role: user.role, // 👈 essentiel pour Flutter
+      role: user.role,
     });
   } catch (err) {
     res.status(500).json({ message: 'Erreur serveur' });

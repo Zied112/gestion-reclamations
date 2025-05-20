@@ -50,15 +50,15 @@ class _ReclamationFormState extends State<ReclamationForm> {
   @override
   void initState() {
     super.initState();
-    _getUserEmail();
+    _getUserName();
   }
 
-  // Fonction pour récupérer l'email de l'utilisateur connecté
-  void _getUserEmail() async {
-    String? email = await ApiService.obtenirEmailUtilisateurConnecte();
-    if (email != null) {
+  // Fonction pour récupérer le nom de l'utilisateur connecté
+  void _getUserName() async {
+    String? name = await ApiService.obtenirNomUtilisateurConnecte();
+    if (name != null) {
       setState(() {
-        _createdBy = email;
+        _createdBy = name;
       });
     } else {
       print("Aucun utilisateur connecté");

@@ -19,7 +19,12 @@ exports.getAllReclamations = async (req, res) => {
 exports.updateStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, assignedTo } = req.body;
+    let { status, assignedTo } = req.body;
+
+    console.log('--- [updateStatus] ---');
+    console.log('ID:', id);
+    console.log('status:', status);
+    console.log('assignedTo:', assignedTo);
 
     // Vérifier si la réclamation existe
     const reclamation = await Reclamation.findById(id);
@@ -27,11 +32,15 @@ exports.updateStatus = async (req, res) => {
       return res.status(404).json({ error: 'Réclamation non trouvée' });
     }
 
-    // Si un utilisateur est assigné, vérifier si l'ID de l'utilisateur existe dans la base de données
+    // Si un utilisateur est assigné, vérifier si c'est un nom ou un ObjectId
     if (assignedTo) {
-      const userExists = await User.findById(assignedTo);
-      if (!userExists) {
-        return res.status(404).json({ error: 'Utilisateur assigné non trouvé' });
+      // Si ce n'est pas un ObjectId, on suppose que c'est un nom
+      if (!assignedTo.match(/^[0-9a-fA-F]{24}$/)) {
+        const user = await User.findOne({ name: assignedTo });
+        if (!user) {
+          return res.status(404).json({ error: 'Utilisateur assigné non trouvé' });
+        }
+        assignedTo = user._id;
       }
     }
 
@@ -42,10 +51,11 @@ exports.updateStatus = async (req, res) => {
       { new: true }
     );
 
-    // Retourner la réclamation mise à jour
+    console.log('Réclamation mise à jour (status):', updatedReclamation);
     res.json(updatedReclamation);
   } catch (err) {
     // Retourner une erreur avec le message
+    console.log('Erreur updateStatus:', err);
     res.status(400).json({ error: `Erreur: ${err.message}` });
   }
 };
@@ -53,6 +63,11 @@ exports.updateStatus = async (req, res) => {
 exports.updateReclamation = async (req, res) => {
   const { id } = req.params;
   const updateData = req.body;
+
+  // Ajout de logs pour debug
+  console.log('--- [updateReclamation] ---');
+  console.log('ID:', id);
+  console.log('updateData:', updateData);
 
   try {
     const updatedReclamation = await Reclamation.findByIdAndUpdate(
@@ -62,11 +77,14 @@ exports.updateReclamation = async (req, res) => {
     );
 
     if (!updatedReclamation) {
+      console.log('Réclamation non trouvée');
       return res.status(404).json({ message: 'Réclamation non trouvée' });
     }
 
+    console.log('Réclamation mise à jour:', updatedReclamation);
     res.status(200).json(updatedReclamation);
   } catch (error) {
+    console.log('Erreur lors de la mise à jour:', error);
     res.status(500).json({ message: 'Erreur lors de la mise à jour', error });
   }
 };
